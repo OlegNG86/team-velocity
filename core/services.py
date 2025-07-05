@@ -9,6 +9,9 @@ from db.database import get_session
 
 
 class UserService:
+    def __init__(self, session: Optional[Session] = None):
+        self.session = session
+
     def get_or_create_user(
         self,
         telegram_id: str,
@@ -16,7 +19,9 @@ class UserService:
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
     ) -> User:
-        session = get_session()
+        session = self.session or get_session()
+        close_session = self.session is None
+        
         try:
             user = session.query(User).filter(User.telegram_id == telegram_id).first()
 
@@ -45,14 +50,18 @@ class UserService:
 
             return user
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
     def get_user_by_telegram_id(self, telegram_id: str) -> Optional[User]:
-        session = get_session()
+        session = self.session or get_session()
+        close_session = self.session is None
+        
         try:
             return session.query(User).filter(User.telegram_id == telegram_id).first()
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
 
 class StoryPointService:
